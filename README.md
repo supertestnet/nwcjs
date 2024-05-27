@@ -32,6 +32,8 @@ var invoice_info = await checkInvoice( nwc_obj, invoice, delay_tolerance );
 
 ## Check a payment's status
 
+This method will return false if a payment did not succeed yet. If the payment did succeed, it will return the invoice preimage.
+
 If there is an error, consider increasing your delay tolerance from 3 seconds to 5 or so
 
 ```
