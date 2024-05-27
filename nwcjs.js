@@ -33,7 +33,7 @@ var nwcjs = {
         arr2.forEach( ( item, index ) => {if ( index % 2 ) {obj[ arr2[ index - 1 ] ] = item;}});
         obj[ "app_pubkey" ] = nobleSecp256k1.getPublicKey( obj[ "app_privkey" ], true ).substring( 2 );
         nwcjs.nwc_objs.push( obj );
-        return true;
+        return obj;
     },
     getSignedEvent: async ( event, privateKey ) => {
         var eventData = JSON.stringify([
@@ -105,6 +105,12 @@ var nwcjs = {
         var etags = [ event_id ];
         var ptags = [ nwc_obj[ "app_pubkey" ] ];
         var events = await nwcjs.getEvents( relay, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable );
+        if ( !events.length ) {
+            nwcjs.response = {
+                error: "timed out",
+            }
+            return;
+        }
         var dmsg = nwcjs.decrypt( nwc_obj[ "app_privkey" ], events[ 0 ].pubkey, events[ 0 ].content );
         nwcjs.response = JSON.parse( dmsg );
     },
@@ -167,7 +173,12 @@ var nwcjs = {
         // an error looks like this:
         // {error: {code: "INTERNAL", message: "Something went wrong while looking up invoice: "}, result_type: "lookup_invoice"}
     },
-    tryToPayInvoice: async ( nwc_obj, invoice, amnt, seconds_of_delay_tolerable = 30 ) => {
+    didPaymentSucceed: async ( nwc_obj, invoice, seconds_of_delay_tolerable = 3 ) => {
+        var invoice_info = await nwcjs.checkInvoice( nwc_obj, invoice, seconds_of_delay_tolerable );
+        if ( invoice_info && !( "error" in invoice_info ) ) return true;
+        return false;
+    },
+    tryToPayInvoice: async ( nwc_obj, invoice, amnt ) => {
         var msg = {
             method: "pay_invoice",
             params: {
