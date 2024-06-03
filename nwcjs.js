@@ -229,9 +229,9 @@ var nwcjs = {
         num = Number( num );
         return new Promise( resolve => setTimeout( resolve, num ) );
     },
-    getZapRequest: async ( endpoint, amount, relay = "wss://nostrue.com" ) => {
+    getZapRequest: async ( lnaddress, amount, relay = "wss://nostrue.com" ) => {
         amount = amount * 1000;
-        var endpoint = endpoint.split( "@" );
+        var endpoint = lnaddress.split( "@" );
         var url = "https://" + endpoint[ 1 ] + "/.well-known/lnurlp/" + endpoint[ 0 ];
         var url_bytes = new TextEncoder().encode( url );
         var lnurl = bech32.bech32.encode( "lnurl", bech32.bech32.toWords( url_bytes ), 100_000 );
