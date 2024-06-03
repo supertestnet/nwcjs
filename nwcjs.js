@@ -1,6 +1,7 @@
 // dependencies: browserify-cipher and noble-secp256k1
 // https://bundle.run/browserify-cipher@1.0.1
 // https://bundle.run/noble-secp256k1@1.2.14
+// https://bundle.run/bech32@2.0.0
 var nwcjs = {
     nwc_objs: [],
     response: null,
@@ -56,7 +57,7 @@ var nwcjs = {
         });
         return event.id;
     },
-    getEvents: async ( relay, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable ) => {
+    getEvents: async ( relay, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable, debug ) => {
         var socket = new WebSocket( relay );
         var events = [];
         socket.addEventListener( 'message', async function( message ) {
@@ -82,7 +83,7 @@ var nwcjs = {
             await nwcjs.waitSomeSeconds( 1 );
             num_of_seconds_waited = num_of_seconds_waited + 1;
             var time_is_up = num_of_seconds_waited >= seconds_of_delay_tolerable;
-            console.log( `num_of_seconds_waited:`, num_of_seconds_waited, `out of`, seconds_of_delay_tolerable );
+            if ( debug ) console.log( `num_of_seconds_waited:`, num_of_seconds_waited, `out of`, seconds_of_delay_tolerable );
             if ( time_is_up ) {
                 socket.close();
                 return events;
@@ -228,4 +229,49 @@ var nwcjs = {
         num = Number( num );
         return new Promise( resolve => setTimeout( resolve, num ) );
     },
+    getZapRequest: async ( endpoint, amount, relay = "wss://nostrue.com" ) => {
+        amount = amount * 1000;
+        var endpoint = endpoint.split( "@" );
+        var url = "https://" + endpoint[ 1 ] + "/.well-known/lnurlp/" + endpoint[ 0 ];
+        var url_bytes = new TextEncoder().encode( url );
+        var lnurl = bech32.bech32.encode( "lnurl", bech32.bech32.toWords( url_bytes ), 100_000 );
+        var data = await fetch( url );
+        data = await data.json();
+        var serverpub = data[ "nostrPubkey" ];
+        var privkey = nwcjs.bytesToHex( nobleSecp256k1.utils.randomPrivateKey() )
+        var pubkey = nobleSecp256k1.getPublicKey( privkey, true ).substring( 2 );
+        var obj = {
+            kind: 9734,
+            content: "",
+            tags: [
+              [ "relays", relay ],
+              [ "amount", `${amount}` ],
+              [ "p", serverpub ],
+              [ "e", "ab".repeat( 32 ) ],
+              [ "lnurl", lnurl ],
+            ],
+            created_at: Math.floor( Date.now() / 1000 ),
+            pubkey: pubkey,
+        }
+        var event = await nwcjs.getSignedEvent( obj, privkey );
+        var id = event.id;
+        var encoded = encodeURI( JSON.stringify( event ) );
+        var callback = data[ "callback" ] + "?amount=" + amount + "&nostr=" + encoded + "&lnurl=" + lnurl;
+        var invoice_data = await fetch( callback );
+        var {pr: invoice} = await invoice_data.json();
+        return invoice;
+    },
+    checkZapStatus: async ( invoice, relay = "wss://nostrue.com" ) => {
+        var bolt11;
+        var events = await nwcjs.getEvents( relay, [ 9735 ], null, null, 1, [ "ab".repeat( 32 ) ], null, 3 );
+        if ( !events.length ) return "not paid yet";
+        var receipt = events[ 0 ];
+        receipt.tags.every( item => {
+            if ( item[ 0 ] !== "bolt11" ) return true;
+            bolt11 = item[ 1 ];
+            return;
+        });
+        if ( bolt11 != invoice ) return "not paid yet";
+        return events[ 0 ];
+    }
 }
