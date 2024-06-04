@@ -259,11 +259,12 @@ var nwcjs = {
         var callback = data[ "callback" ] + "?amount=" + amount + "&nostr=" + encoded + "&lnurl=" + lnurl;
         var invoice_data = await fetch( callback );
         var {pr: invoice} = await invoice_data.json();
-        return invoice;
+        var checking_id = pubkey;
+        return [ invoice, checking_id ];
     },
-    checkZapStatus: async ( invoice, relays = ["wss://nostrue.com"] ) => {
+    checkZapStatus: async ( invoice, checking_id, relays = ["wss://nostrue.com"] ) => {
         var bolt11;
-        var events = await nwcjs.getEvents( relays[ 0 ], [ 9735 ], null, null, 1, [ pubkey ], null, 3 );
+        var events = await nwcjs.getEvents( relays[ 0 ], [ 9735 ], null, null, 1, [ checking_id ], null, 3 );
         if ( !events.length ) return "not paid yet";
         var receipt = events[ 0 ];
         receipt.tags.every( item => {
