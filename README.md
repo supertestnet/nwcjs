@@ -1,5 +1,5 @@
 # nwcjs
-A vanilla javascript library for working with Nostr Wallet Connect
+A vanilla javascript library for working with Nostr Wallet Connect and zaps
 
 ## Use it like this
 
@@ -27,7 +27,7 @@ If there is an error, consider increasing your delay tolerance from 3 seconds to
 ```
 var invoice = "lntb2500n1pwxlkl5pp5g8hz28tlf950ps942lu3dknfete8yax2ctywpwjs872x9kngvvuqdqage5hyum5yp6x2um5yp5kuan0d93k2cqzyskdc5s2ltgm9kklz42x3e4tggdd9lcep2s9t2yk54gnfxg48wxushayrt52zjmua43gdnxmuc5s0c8g29ja9vnxs6x3kxgsha07htcacpmdyl64";
 var delay_tolerance = 3;
-var invoice_info = await checkInvoice( nwc_obj, invoice, delay_tolerance );
+var invoice_info = await nwcjs.checkInvoice( nwc_obj, invoice, delay_tolerance );
 ```
 
 ## Check a payment's status
@@ -39,7 +39,7 @@ If there is an error, consider increasing your delay tolerance from 3 seconds to
 ```
 var invoice = "lntb2500n1pwxlkl5pp5g8hz28tlf950ps942lu3dknfete8yax2ctywpwjs872x9kngvvuqdqage5hyum5yp6x2um5yp5kuan0d93k2cqzyskdc5s2ltgm9kklz42x3e4tggdd9lcep2s9t2yk54gnfxg48wxushayrt52zjmua43gdnxmuc5s0c8g29ja9vnxs6x3kxgsha07htcacpmdyl64";
 var delay_tolerance = 3;
-var invoice_info = await didPaymentSucceed( nwc_obj, invoice, delay_tolerance );
+var invoice_info = await nwcjs.didPaymentSucceed( nwc_obj, invoice, delay_tolerance );
 ```
 
 ## Pay an invoice
@@ -52,4 +52,26 @@ If the invoice you're paying is amountless, add an amount to your payment by mod
 var invoice = "lntb2500n1pwxlkl5pp5g8hz28tlf950ps942lu3dknfete8yax2ctywpwjs872x9kngvvuqdqage5hyum5yp6x2um5yp5kuan0d93k2cqzyskdc5s2ltgm9kklz42x3e4tggdd9lcep2s9t2yk54gnfxg48wxushayrt52zjmua43gdnxmuc5s0c8g29ja9vnxs6x3kxgsha07htcacpmdyl64";
 var amnt = null;
 await nwcjs.tryToPayInvoice( nwc_info, invoice, amnt );
+```
+
+## Make a zap request
+
+This method takes a lightning address and amount of sats as input and returns a lightning invoice and a checking id. You can also specify a list of one or more relays where you want the recipient of the funds to send tbeir zap receipt to.
+
+```
+var lnaddy = "supertestnet@stacker.news";
+var amount = 500;
+var relays = ["wss://nostrue.com"];
+var [ invoice, checking_id ] = await nwcjs.getZapRequest( lnaddy, amount, relays );
+```
+
+## Check the status of a zap
+
+This method takes a lightning invoice and checking id as input and returns either the string "not paid yet" or the zap receipt provided by the recipient of the funds. You can also specify a list of one or more relays where you expect the recipient of the funds to send tbeir zap receipt to.
+
+```
+var invoice = "lnbc5u1pn9702rpp5f4llv47d5twpzyguv2ja7dmterschk5ee33e25qhgmc3vr9ttdgqdpuge6kuerfdenjqsrnw4cx2un5v4ehgmn9wssx7m3qwd6xzcmtv4ezumn9waescqzzsxqrrsssp5ss0vw8je6jclg2yzvjxwf5u94ay9dzj0ef40jv6m668247553d9q9qyyssqv7ehg6mal8y8ldhq2aflhmetdhghkxw0xndtprls85qeuve57cxzaaty9zllk7c2c4hn99azsnkc9hr44zvzzq36rcpapgyv4qcw7pspt5yct5";
+var checking_id = "412e821f8f821402dc9e8e8ce1f1e8203beba95a52807e8102c40d1a42130858";
+var relays = ["wss://nostrue.com"];
+var paid = await nwcjs.checkZapStatus( invoice, checking_id, relays );
 ```
