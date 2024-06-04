@@ -56,7 +56,7 @@ await nwcjs.tryToPayInvoice( nwc_info, invoice, amnt );
 
 ## Make a zap request
 
-This method takes a lightning address and amount of sats as input and returns a lightning invoice and a checking id. You can also specify a list of one or more relays where you want the recipient of the funds to send tbeir zap receipt to.
+This method takes a lightning address and amount of sats as input and returns a lightning invoice and a checking id. You can also optionally specify a list of one or more relays where you want the recipient of the funds to send tbeir zap receipt to. By default, it requests all receipts to be sent to just one relay, nostrue.com.
 
 ```
 var lnaddy = "supertestnet@stacker.news";
@@ -67,7 +67,7 @@ var [ invoice, checking_id ] = await nwcjs.getZapRequest( lnaddy, amount, relays
 
 ## Check the status of a zap
 
-This method takes a lightning invoice and checking id as input and returns either the string "not paid yet" or the zap receipt provided by the recipient of the funds. You can also specify a list of one or more relays where you expect the recipient of the funds to send tbeir zap receipt to.
+This method takes a lightning invoice and checking id as input and returns either the string "not paid yet" or the zap receipt provided by the recipient of the funds. You can also specify a list of one or more relays where you expect the recipient of the funds to send tbeir zap receipt to. By default, it listens for all zap receipts on just one relay, nostrue.com.
 
 ```
 var invoice = "lnbc5u1pn9702rpp5f4llv47d5twpzyguv2ja7dmterschk5ee33e25qhgmc3vr9ttdgqdpuge6kuerfdenjqsrnw4cx2un5v4ehgmn9wssx7m3qwd6xzcmtv4ezumn9waescqzzsxqrrsssp5ss0vw8je6jclg2yzvjxwf5u94ay9dzj0ef40jv6m668247553d9q9qyyssqv7ehg6mal8y8ldhq2aflhmetdhghkxw0xndtprls85qeuve57cxzaaty9zllk7c2c4hn99azsnkc9hr44zvzzq36rcpapgyv4qcw7pspt5yct5";
