@@ -73,5 +73,5 @@ This method takes a lightning invoice and checking id as input and returns eithe
 var invoice = "lnbc5u1pn9702rpp5f4llv47d5twpzyguv2ja7dmterschk5ee33e25qhgmc3vr9ttdgqdpuge6kuerfdenjqsrnw4cx2un5v4ehgmn9wssx7m3qwd6xzcmtv4ezumn9waescqzzsxqrrsssp5ss0vw8je6jclg2yzvjxwf5u94ay9dzj0ef40jv6m668247553d9q9qyyssqv7ehg6mal8y8ldhq2aflhmetdhghkxw0xndtprls85qeuve57cxzaaty9zllk7c2c4hn99azsnkc9hr44zvzzq36rcpapgyv4qcw7pspt5yct5";
 var checking_id = "412e821f8f821402dc9e8e8ce1f1e8203beba95a52807e8102c40d1a42130858";
 var relays = ["wss://nostrue.com"];
-var paid = await nwcjs.checkZapStatus( invoice, checking_id, relays );
+var status = await nwcjs.checkZapStatus( invoice, checking_id, relays );
 ```
