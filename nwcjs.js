@@ -229,7 +229,7 @@ var nwcjs = {
         num = Number( num );
         return new Promise( resolve => setTimeout( resolve, num ) );
     },
-    getZapRequest: async ( endpoint, amount, relay = "wss://nostrue.com" ) => {
+    getZapRequest: async ( endpoint, amount, relays = ["wss://nostrue.com"] ) => {
         amount = amount * 1000;
         var endpoint = endpoint.split( "@" );
         var url = "https://" + endpoint[ 1 ] + "/.well-known/lnurlp/" + endpoint[ 0 ];
@@ -244,7 +244,7 @@ var nwcjs = {
             kind: 9734,
             content: "",
             tags: [
-              [ "relays", relay ],
+              [ "relays", ...relays ],
               [ "amount", `${amount}` ],
               [ "p", serverpub ],
               [ "e", pubkey ],
@@ -261,9 +261,9 @@ var nwcjs = {
         var {pr: invoice} = await invoice_data.json();
         return invoice;
     },
-    checkZapStatus: async ( invoice, relay = "wss://nostrue.com" ) => {
+    checkZapStatus: async ( invoice, relays = ["wss://nostrue.com"] ) => {
         var bolt11;
-        var events = await nwcjs.getEvents( relay, [ 9735 ], null, null, 1, [ pubkey ], null, 3 );
+        var events = await nwcjs.getEvents( relays[ 0 ], [ 9735 ], null, null, 1, [ pubkey ], null, 3 );
         if ( !events.length ) return "not paid yet";
         var receipt = events[ 0 ];
         receipt.tags.every( item => {
