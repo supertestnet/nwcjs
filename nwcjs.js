@@ -57,7 +57,7 @@ var nwcjs = {
         });
         return event.id;
     },
-    getEvents: async ( relay, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable ) => {
+    getEvents: async ( relay, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable, debug ) => {
         var socket = new WebSocket( relay );
         var events = [];
         socket.addEventListener( 'message', async function( message ) {
@@ -83,7 +83,7 @@ var nwcjs = {
             await nwcjs.waitSomeSeconds( 1 );
             num_of_seconds_waited = num_of_seconds_waited + 1;
             var time_is_up = num_of_seconds_waited >= seconds_of_delay_tolerable;
-            console.log( `num_of_seconds_waited:`, num_of_seconds_waited, `out of`, seconds_of_delay_tolerable );
+            if ( debug ) console.log( `num_of_seconds_waited:`, num_of_seconds_waited, `out of`, seconds_of_delay_tolerable );
             if ( time_is_up ) {
                 socket.close();
                 return events;
