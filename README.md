@@ -27,7 +27,7 @@ If there is an error, consider increasing your delay tolerance from 3 seconds to
 ```
 var invoice = "lntb2500n1pwxlkl5pp5g8hz28tlf950ps942lu3dknfete8yax2ctywpwjs872x9kngvvuqdqage5hyum5yp6x2um5yp5kuan0d93k2cqzyskdc5s2ltgm9kklz42x3e4tggdd9lcep2s9t2yk54gnfxg48wxushayrt52zjmua43gdnxmuc5s0c8g29ja9vnxs6x3kxgsha07htcacpmdyl64";
 var delay_tolerance = 3;
-var invoice_info = await nwcjs.checkInvoice( nwc_obj, invoice, delay_tolerance );
+var invoice_info = await nwcjs.checkInvoice( nwc_info, invoice, delay_tolerance );
 ```
 
 ## Check a payment's status
@@ -39,7 +39,7 @@ If there is an error, consider increasing your delay tolerance from 3 seconds to
 ```
 var invoice = "lntb2500n1pwxlkl5pp5g8hz28tlf950ps942lu3dknfete8yax2ctywpwjs872x9kngvvuqdqage5hyum5yp6x2um5yp5kuan0d93k2cqzyskdc5s2ltgm9kklz42x3e4tggdd9lcep2s9t2yk54gnfxg48wxushayrt52zjmua43gdnxmuc5s0c8g29ja9vnxs6x3kxgsha07htcacpmdyl64";
 var delay_tolerance = 3;
-var invoice_info = await nwcjs.didPaymentSucceed( nwc_obj, invoice, delay_tolerance );
+var invoice_info = await nwcjs.didPaymentSucceed( nwc_info, invoice, delay_tolerance );
 ```
 
 ## Pay an invoice
