@@ -57,7 +57,7 @@ var nwcjs = {
         });
         return event.id;
     },
-    getEvents: async ( relay, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable, debug ) => {
+    getEvents: async ( relay, ids, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable, debug ) => {
         var socket = new WebSocket( relay );
         var events = [];
         socket.addEventListener( 'message', async function( message ) {
@@ -69,6 +69,7 @@ var nwcjs = {
         socket.addEventListener( 'open', async function( e ) {
             var subId   = nwcjs.bytesToHex( nobleSecp256k1.utils.randomPrivateKey() ).substring( 0, 16 );
             var filter  = {}
+            if ( ids ) filter.ids = ids;
             if ( kinds ) filter.kinds = kinds;
             if ( until ) filter.until = until;
             if ( since ) filter.since = since;
@@ -99,13 +100,14 @@ var nwcjs = {
     getResponse: async ( nwc_obj, event_id, seconds_of_delay_tolerable = 3 ) => {
         nwcjs.response = null;
         var relay = nwc_obj[ "relay" ];
+        var ids = null;
         var kinds = [ 23195 ];
         var until = null;
         var since = null;
         var limit = 1;
         var etags = [ event_id ];
         var ptags = [ nwc_obj[ "app_pubkey" ] ];
-        var events = await nwcjs.getEvents( relay, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable );
+        var events = await nwcjs.getEvents( relay, ids, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable );
         if ( !events.length ) {
             nwcjs.response = {
                 error: "timed out",
@@ -264,7 +266,7 @@ var nwcjs = {
     },
     checkZapStatus: async ( invoice, checking_id, relays = ["wss://nostrue.com"] ) => {
         var bolt11;
-        var events = await nwcjs.getEvents( relays[ 0 ], [ 9735 ], null, null, 1, [ checking_id ], null, 3 );
+        var events = await nwcjs.getEvents( relays[ 0 ], null, [ 9735 ], null, null, 1, [ checking_id ], null, 3 );
         if ( !events.length ) return "not paid yet";
         var receipt = events[ 0 ];
         receipt.tags.every( item => {
