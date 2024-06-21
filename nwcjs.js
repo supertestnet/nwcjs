@@ -57,7 +57,7 @@ var nwcjs = {
         });
         return event.id;
     },
-    getEvents: async ( relay, ids, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable, debug ) => {
+    getEvents: async ( relay, ids, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable = 3, debug ) => {
         var socket = new WebSocket( relay );
         var events = [];
         socket.addEventListener( 'message', async function( message ) {
