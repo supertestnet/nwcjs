@@ -180,7 +180,7 @@ var nwcjs = {
     },
     didPaymentSucceed: async ( nwc_obj, invoice, seconds_of_delay_tolerable = 3 ) => {
         var invoice_info = await nwcjs.checkInvoice( nwc_obj, invoice, seconds_of_delay_tolerable );
-        if ( invoice_info && !( "error" in invoice_info ) && "result" in invoice_info && "preimage" in invoice_info[ "result" ] )
+        if ( invoice_info && "result" in invoice_info && "preimage" in invoice_info[ "result" ] && invoice_info[ "result" ][ "preimage" ] )
             return invoice_info[ "result" ][ "preimage" ];
         return false;
     },
