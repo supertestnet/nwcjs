@@ -152,6 +152,7 @@ var nwcjs = {
             method: "lookup_invoice",
             params: {
                 invoice,
+                bolt11: invoice,
             }
         });
         var emsg = nwcjs.encrypt( nwc_obj[ "app_privkey" ], nwc_obj[ "wallet_pubkey" ], msg );
