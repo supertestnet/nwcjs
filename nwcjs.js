@@ -33,6 +33,7 @@ var nwcjs = {
         arr2.forEach( ( item, index ) => {if ( item === "secret" ) arr2[ index ] = "app_privkey";});
         arr2.forEach( ( item, index ) => {if ( index % 2 ) {obj[ arr2[ index - 1 ] ] = item;}});
         obj[ "app_pubkey" ] = nobleSecp256k1.getPublicKey( obj[ "app_privkey" ], true ).substring( 2 );
+        obj[ "relay" ] = obj[ "relay" ].replaceAll( "%3A", ":" ).replaceAll( "%2F", "/" );
         nwcjs.nwc_objs.push( obj );
         return obj;
     },
