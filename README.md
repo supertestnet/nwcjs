@@ -30,6 +30,15 @@ var delay_tolerance = 3;
 var invoice_info = await nwcjs.checkInvoice( nwc_info, invoice, delay_tolerance );
 ```
 
+## Check your balance
+
+If there is an error, consider increasing your delay tolerance from 3 seconds to 5 or so
+
+```javascript
+var delay_tolerance = 3;
+var balance_info = await nwcjs.getBalance( nwc_info, delay_tolerance );
+```
+
 ## Check a payment's status
 
 This method will return false if a payment did not succeed yet. If the payment did succeed, it will return the invoice preimage.
