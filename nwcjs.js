@@ -206,6 +206,33 @@ var nwcjs = {
         var relay = nwc_obj[ "relay" ];
         nwcjs.sendEvent( event, relay );
     },
+    getBalance: async ( nwc_obj, seconds_of_delay_tolerable ) => {
+        var msg = {
+            method: "get_balance",
+            params: {}
+        }
+        msg = JSON.stringify( msg );
+        var emsg = nwcjs.encrypt( nwc_obj[ "app_privkey" ], nwc_obj[ "wallet_pubkey" ], msg );
+        var obj = {
+            kind: 23194,
+            content: emsg,
+            tags: [ [ "p", nwc_obj[ "wallet_pubkey" ] ] ],
+            created_at: Math.floor( Date.now() / 1000 ),
+            pubkey: nwc_obj[ "app_pubkey" ],
+        }
+        var event = await nwcjs.getSignedEvent( obj, nwc_obj[ "app_privkey" ] );
+        var id = event.id;
+        nwcjs.getResponse( nwc_obj, id, seconds_of_delay_tolerable );
+        await nwcjs.waitSomeSeconds( 1 );
+        var relay = nwc_obj[ "relay" ];
+        nwcjs.sendEvent( event, relay );
+        var loop = async () => {
+            await nwcjs.waitSomeSeconds( 1 );
+            if ( !nwcjs.response ) return await loop();
+            return nwcjs.response;
+        }
+        return await loop();
+    },
     encrypt: ( privkey, pubkey, text ) => {
         var key = nobleSecp256k1.getSharedSecret( privkey, '02' + pubkey, true ).substring( 2 );
         var iv = window.crypto.getRandomValues( new Uint8Array( 16 ) );
