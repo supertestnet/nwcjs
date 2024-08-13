@@ -271,7 +271,6 @@ var nwcjs = {
         if ( unpaid ) msg.params.unpaid = unpaid;
         if ( type ) msg.params.type = type;
         msg = JSON.stringify( msg );
-        console.log( msg );
         var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
         var obj = {
             kind: 23194,
