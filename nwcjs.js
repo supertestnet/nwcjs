@@ -3,7 +3,7 @@
 // https://bundle.run/noble-secp256k1@1.2.14
 // https://bundle.run/bech32@2.0.0
 var nwcjs = {
-    nwc_objs: [],
+    nwc_infos: [],
     response: null,
     hexToBytes: hex => Uint8Array.from( hex.match( /.{1,2}/g ).map( byte => parseInt( byte, 16 ) ) ),
     bytesToHex: bytes => bytes.reduce( ( str, byte ) => str + byte.toString( 16 ).padStart( 2, "0" ), "" ),
@@ -34,7 +34,7 @@ var nwcjs = {
         arr2.forEach( ( item, index ) => {if ( index % 2 ) {obj[ arr2[ index - 1 ] ] = item;}});
         obj[ "app_pubkey" ] = nobleSecp256k1.getPublicKey( obj[ "app_privkey" ], true ).substring( 2 );
         obj[ "relay" ] = obj[ "relay" ].replaceAll( "%3A", ":" ).replaceAll( "%2F", "/" );
-        nwcjs.nwc_objs.push( obj );
+        nwcjs.nwc_infos.push( obj );
         return obj;
     },
     getSignedEvent: async ( event, privateKey ) => {
@@ -98,16 +98,16 @@ var nwcjs = {
         }
         return await loop();
     },
-    getResponse: async ( nwc_obj, event_id, seconds_of_delay_tolerable = 3 ) => {
+    getResponse: async ( nwc_info, event_id, seconds_of_delay_tolerable = 3 ) => {
         nwcjs.response = null;
-        var relay = nwc_obj[ "relay" ];
+        var relay = nwc_info[ "relay" ];
         var ids = null;
         var kinds = [ 23195 ];
         var until = null;
         var since = null;
         var limit = 1;
         var etags = [ event_id ];
-        var ptags = [ nwc_obj[ "app_pubkey" ] ];
+        var ptags = [ nwc_info[ "app_pubkey" ] ];
         var events = await nwcjs.getEvents( relay, ids, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable );
         if ( !events.length ) {
             nwcjs.response = {
@@ -115,30 +115,27 @@ var nwcjs = {
             }
             return;
         }
-        var dmsg = nwcjs.decrypt( nwc_obj[ "app_privkey" ], events[ 0 ].pubkey, events[ 0 ].content );
+        var dmsg = nwcjs.decrypt( nwc_info[ "app_privkey" ], events[ 0 ].pubkey, events[ 0 ].content );
         nwcjs.response = JSON.parse( dmsg );
     },
-    makeInvoice: async ( nwc_obj, amt, desc, seconds_of_delay_tolerable = 3 ) => {
+    getInfo: async ( nwc_info, seconds_of_delay_tolerable = 3 ) => {
         var msg = JSON.stringify({
-            method: "make_invoice",
-            params: {
-                amount: amt * 1000,
-                description: desc,
-            }
+            method: "get_info",
+            params: {}
         });
-        var emsg = nwcjs.encrypt( nwc_obj[ "app_privkey" ], nwc_obj[ "wallet_pubkey" ], msg );
+        var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
         var obj = {
             kind: 23194,
             content: emsg,
-            tags: [ [ "p", nwc_obj[ "wallet_pubkey" ] ] ],
+            tags: [ [ "p", nwc_info[ "wallet_pubkey" ] ] ],
             created_at: Math.floor( Date.now() / 1000 ),
-            pubkey: nwc_obj[ "app_pubkey" ],
+            pubkey: nwc_info[ "app_pubkey" ],
         }
-        var event = await nwcjs.getSignedEvent( obj, nwc_obj[ "app_privkey" ] );
+        var event = await nwcjs.getSignedEvent( obj, nwc_info[ "app_privkey" ] );
         var id = event.id;
-        nwcjs.getResponse( nwc_obj, id, seconds_of_delay_tolerable );
+        nwcjs.getResponse( nwc_info, id, seconds_of_delay_tolerable );
         await nwcjs.waitSomeSeconds( 1 );
-        var relay = nwc_obj[ "relay" ];
+        var relay = nwc_info[ "relay" ];
         nwcjs.sendEvent( event, relay );
         var loop = async () => {
             await nwcjs.waitSomeSeconds( 1 );
@@ -147,7 +144,36 @@ var nwcjs = {
         }
         return await loop();
     },
-    checkInvoice: async ( nwc_obj, invoice, seconds_of_delay_tolerable = 3 ) => {
+    makeInvoice: async ( nwc_info, amt, desc, seconds_of_delay_tolerable = 3 ) => {
+        var msg = JSON.stringify({
+            method: "make_invoice",
+            params: {
+                amount: amt * 1000,
+                description: desc,
+            }
+        });
+        var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
+        var obj = {
+            kind: 23194,
+            content: emsg,
+            tags: [ [ "p", nwc_info[ "wallet_pubkey" ] ] ],
+            created_at: Math.floor( Date.now() / 1000 ),
+            pubkey: nwc_info[ "app_pubkey" ],
+        }
+        var event = await nwcjs.getSignedEvent( obj, nwc_info[ "app_privkey" ] );
+        var id = event.id;
+        nwcjs.getResponse( nwc_info, id, seconds_of_delay_tolerable );
+        await nwcjs.waitSomeSeconds( 1 );
+        var relay = nwc_info[ "relay" ];
+        nwcjs.sendEvent( event, relay );
+        var loop = async () => {
+            await nwcjs.waitSomeSeconds( 1 );
+            if ( !nwcjs.response ) return await loop();
+            return nwcjs.response;
+        }
+        return await loop();
+    },
+    checkInvoice: async ( nwc_info, invoice, seconds_of_delay_tolerable = 3 ) => {
         var msg = JSON.stringify({
             method: "lookup_invoice",
             params: {
@@ -155,19 +181,19 @@ var nwcjs = {
                 bolt11: invoice,
             }
         });
-        var emsg = nwcjs.encrypt( nwc_obj[ "app_privkey" ], nwc_obj[ "wallet_pubkey" ], msg );
+        var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
         var obj = {
             kind: 23194,
             content: emsg,
-            tags: [ [ "p", nwc_obj[ "wallet_pubkey" ] ] ],
+            tags: [ [ "p", nwc_info[ "wallet_pubkey" ] ] ],
             created_at: Math.floor( Date.now() / 1000 ),
-            pubkey: nwc_obj[ "app_pubkey" ],
+            pubkey: nwc_info[ "app_pubkey" ],
         }
-        var event = await nwcjs.getSignedEvent( obj, nwc_obj[ "app_privkey" ] );
+        var event = await nwcjs.getSignedEvent( obj, nwc_info[ "app_privkey" ] );
         var id = event.id;
-        nwcjs.getResponse( nwc_obj, id, seconds_of_delay_tolerable );
+        nwcjs.getResponse( nwc_info, id, seconds_of_delay_tolerable );
         await nwcjs.waitSomeSeconds( 1 );
-        var relay = nwc_obj[ "relay" ];
+        var relay = nwc_info[ "relay" ];
         nwcjs.sendEvent( event, relay );
         var loop = async () => {
             await nwcjs.waitSomeSeconds( 1 );
@@ -178,13 +204,13 @@ var nwcjs = {
         // an error looks like this:
         // {error: {code: "INTERNAL", message: "Something went wrong while looking up invoice: "}, result_type: "lookup_invoice"}
     },
-    didPaymentSucceed: async ( nwc_obj, invoice, seconds_of_delay_tolerable = 3 ) => {
-        var invoice_info = await nwcjs.checkInvoice( nwc_obj, invoice, seconds_of_delay_tolerable );
+    didPaymentSucceed: async ( nwc_info, invoice, seconds_of_delay_tolerable = 3 ) => {
+        var invoice_info = await nwcjs.checkInvoice( nwc_info, invoice, seconds_of_delay_tolerable );
         if ( invoice_info && "result" in invoice_info && "preimage" in invoice_info[ "result" ] && invoice_info[ "result" ][ "preimage" ] )
             return invoice_info[ "result" ][ "preimage" ];
         return false;
     },
-    tryToPayInvoice: async ( nwc_obj, invoice, amnt ) => {
+    tryToPayInvoice: async ( nwc_info, invoice, amnt ) => {
         var msg = {
             method: "pay_invoice",
             params: {
@@ -193,38 +219,72 @@ var nwcjs = {
         }
         if ( amnt ) msg[ "params" ][ "amount" ] = amnt;
         msg = JSON.stringify( msg );
-        var emsg = nwcjs.encrypt( nwc_obj[ "app_privkey" ], nwc_obj[ "wallet_pubkey" ], msg );
+        var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
         var obj = {
             kind: 23194,
             content: emsg,
-            tags: [ [ "p", nwc_obj[ "wallet_pubkey" ] ] ],
+            tags: [ [ "p", nwc_info[ "wallet_pubkey" ] ] ],
             created_at: Math.floor( Date.now() / 1000 ),
-            pubkey: nwc_obj[ "app_pubkey" ],
+            pubkey: nwc_info[ "app_pubkey" ],
         }
-        var event = await nwcjs.getSignedEvent( obj, nwc_obj[ "app_privkey" ] );
+        var event = await nwcjs.getSignedEvent( obj, nwc_info[ "app_privkey" ] );
         var id = event.id;
-        var relay = nwc_obj[ "relay" ];
+        var relay = nwc_info[ "relay" ];
         nwcjs.sendEvent( event, relay );
     },
-    getBalance: async ( nwc_obj, seconds_of_delay_tolerable ) => {
+    getBalance: async ( nwc_info, seconds_of_delay_tolerable = 3 ) => {
         var msg = {
             method: "get_balance",
             params: {}
         }
         msg = JSON.stringify( msg );
-        var emsg = nwcjs.encrypt( nwc_obj[ "app_privkey" ], nwc_obj[ "wallet_pubkey" ], msg );
+        var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
         var obj = {
             kind: 23194,
             content: emsg,
-            tags: [ [ "p", nwc_obj[ "wallet_pubkey" ] ] ],
+            tags: [ [ "p", nwc_info[ "wallet_pubkey" ] ] ],
             created_at: Math.floor( Date.now() / 1000 ),
-            pubkey: nwc_obj[ "app_pubkey" ],
+            pubkey: nwc_info[ "app_pubkey" ],
         }
-        var event = await nwcjs.getSignedEvent( obj, nwc_obj[ "app_privkey" ] );
+        var event = await nwcjs.getSignedEvent( obj, nwc_info[ "app_privkey" ] );
         var id = event.id;
-        nwcjs.getResponse( nwc_obj, id, seconds_of_delay_tolerable );
+        nwcjs.getResponse( nwc_info, id, seconds_of_delay_tolerable );
         await nwcjs.waitSomeSeconds( 1 );
-        var relay = nwc_obj[ "relay" ];
+        var relay = nwc_info[ "relay" ];
+        nwcjs.sendEvent( event, relay );
+        var loop = async () => {
+            await nwcjs.waitSomeSeconds( 1 );
+            if ( !nwcjs.response ) return await loop();
+            return nwcjs.response;
+        }
+        return await loop();
+    },
+    listTransactions: async ( nwc_info, from = null, until = null, limit = null, offset = null, unpaid = null, type = undefined, seconds_of_delay_tolerable = 3 ) => {
+        var msg = {
+            method: "list_transactions",
+            params: {}
+        }
+        if ( from ) msg.params.from = from;
+        if ( until ) msg.params.until = until;
+        if ( limit ) msg.params.limit = limit;
+        if ( offset ) msg.params.offset = offset;
+        if ( unpaid ) msg.params.unpaid = unpaid;
+        if ( type ) msg.params.type = type;
+        msg = JSON.stringify( msg );
+        console.log( msg );
+        var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
+        var obj = {
+            kind: 23194,
+            content: emsg,
+            tags: [ [ "p", nwc_info[ "wallet_pubkey" ] ] ],
+            created_at: Math.floor( Date.now() / 1000 ),
+            pubkey: nwc_info[ "app_pubkey" ],
+        }
+        var event = await nwcjs.getSignedEvent( obj, nwc_info[ "app_privkey" ] );
+        var id = event.id;
+        nwcjs.getResponse( nwc_info, id, seconds_of_delay_tolerable );
+        await nwcjs.waitSomeSeconds( 1 );
+        var relay = nwc_info[ "relay" ];
         nwcjs.sendEvent( event, relay );
         var loop = async () => {
             await nwcjs.waitSomeSeconds( 1 );
