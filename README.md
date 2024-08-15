@@ -56,7 +56,7 @@ If there is an error, consider increasing your delay tolerance from 3 seconds to
 var from = 1723625720; //optional. If you include "from" then no tx created before the specified timestamp will be returned
 var until = 1723680682; //optional. If you include "until" then no tx created after the specified timestamp will be returned
 var limit = 10; //optional. If you include "limit" then a number of txs equal to or smaller than your limit will be returned
-var offset = 2; //optional. If you include "offset" then the first n txs which *would* have been returned will be skipped (where n == offset)
+var offset = 2; //optional. If you include "offset" then the first n txs which *would* have been returned will be skipped (where n == offset) and, if possible, other transactions that match your other filters will be added onto the end til you reach (1) the limit you set (2) whatever limit the wallet defaults to, if any (3) or until no more transactions match your other filters
 var unpaid = true; //optional and defaults to false. Unless you set it to true, any txs that haven't been settled yet will be skipped
 var type = "incoming"; //optional and defaults to null. You can set it to "incoming" to only return txs that paid you or set it to "outgoing" to only return txs where you paid someone. Keeping it null (or not including it at all) means you will get all transactions, incoming *and* outgoing.
 var delay_tolerance = 3;
