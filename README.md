@@ -60,7 +60,7 @@ var offset = 2; //optional. If you include "offset" then the first n txs which *
 var unpaid = true; //optional and defaults to false. Unless you set it to true, any txs that haven't been settled yet will be skipped
 var type = "incoming"; //optional and defaults to null. You can set to "incoming" to only return txs that paid you or set it to "outgoing" to only return txs where you paid someone. Keeping it null (or not including it at all) means you will get all transactions, incoming *and* outgoing.
 var delay_tolerance = 3;
-var txs = await nwcjs.listTransactions ( nwc_info, from = null, until = null, limit = null, offset = null, unpaid = null, type = undefined, delay_tolerance );
+var txs = await nwcjs.listTransactions ( nwc_info, from, until, limit, offset, unpaid, type, delay_tolerance );
 ```
 
 ## Check a payment's status
