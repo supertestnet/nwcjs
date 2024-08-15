@@ -53,7 +53,6 @@ var balance_info = await nwcjs.getBalance( nwc_info, delay_tolerance );
 If there is an error, consider increasing your delay tolerance from 3 seconds to 5 or so
 
 ```javascript
-var invoice = "lntb2500n1pwxlkl5pp5g8hz28tlf950ps942lu3dknfete8yax2ctywpwjs872x9kngvvuqdqage5hyum5yp6x2um5yp5kuan0d93k2cqzyskdc5s2ltgm9kklz42x3e4tggdd9lcep2s9t2yk54gnfxg48wxushayrt52zjmua43gdnxmuc5s0c8g29ja9vnxs6x3kxgsha07htcacpmdyl64";
 var from = 1723625720; //optional. If you include "from" then no tx created before the specified timestamp will be returned
 var until = 1723680682; //optional. If you include "until" then no tx created after the specified timestamp will be returned
 var limit = 10; //optional. If you include "limit" then a number of txs equal to or smaller than your limit will be returned
