@@ -9,6 +9,15 @@ Note that nwc_info objects are also stored in nwcjs.nwc_objs so you can manage m
 var nwc_info = nwcjs.processNWCstring( "nostr+walletconnect://2fbe00e6698e717593febba15a68c37de13869b5c304cb8448fa3c541f8620c4?relay=wss://example.relay.com&secret=370d89b58cb4c38fccd4bba520fbbd9397f3682547b66b23a9a6888fef021038&lud16=example@lightning.com" );
 ```
 
+## Get info
+
+If there is an error, consider increasing your delay tolerance from 3 seconds to 5 or so
+
+```javascript
+var delay_tolerance = 3;
+var wallet_info = await nwcjs.getInfo( nwc_info, delay_tolerance );
+```
+
 ## Make an invoice for 100 sats with description "hello world!"
 
 If there is an error, consider increasing your delay tolerance from 3 seconds to 5 or so
@@ -37,6 +46,22 @@ If there is an error, consider increasing your delay tolerance from 3 seconds to
 ```javascript
 var delay_tolerance = 3;
 var balance_info = await nwcjs.getBalance( nwc_info, delay_tolerance );
+```
+
+## List transactions
+
+If there is an error, consider increasing your delay tolerance from 3 seconds to 5 or so
+
+```javascript
+var invoice = "lntb2500n1pwxlkl5pp5g8hz28tlf950ps942lu3dknfete8yax2ctywpwjs872x9kngvvuqdqage5hyum5yp6x2um5yp5kuan0d93k2cqzyskdc5s2ltgm9kklz42x3e4tggdd9lcep2s9t2yk54gnfxg48wxushayrt52zjmua43gdnxmuc5s0c8g29ja9vnxs6x3kxgsha07htcacpmdyl64";
+var from = 1723625720; //optional. If you include "from" then no tx created before the specified timestamp will be returned
+var until = 1723680682; //optional. If you include "until" then no tx created after the specified timestamp will be returned
+var limit = 10; //optional. If you include "limit" then a number of txs equal to or smaller than your limit will be returned
+var offset = 2; //optional. If you include "offset" then the first n txs which *would* have been returned will be skipped (where n == offset)
+var unpaid = true; //optional and defaults to false. Unless you set it to true, any txs that haven't been settled yet will be skipped
+var type = "incoming"; //optional and defaults to null. You can set to "incoming" to only return txs that paid you or set it to "outgoing" to only return txs where you paid someone. Keeping it null (or not including it at all) means you will get all transactions, incoming *and* outgoing.
+var delay_tolerance = 3;
+var txs = await nwcjs.listTransactions ( nwc_info, from = null, until = null, limit = null, offset = null, unpaid = null, type = undefined, delay_tolerance );
 ```
 
 ## Check a payment's status
