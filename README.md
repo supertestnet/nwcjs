@@ -58,7 +58,7 @@ var until = 1723680682; //optional. If you include "until" then no tx created af
 var limit = 10; //optional. If you include "limit" then a number of txs equal to or smaller than your limit will be returned
 var offset = 2; //optional. If you include "offset" then the first n txs which *would* have been returned will be skipped (where n == offset)
 var unpaid = true; //optional and defaults to false. Unless you set it to true, any txs that haven't been settled yet will be skipped
-var type = "incoming"; //optional and defaults to null. You can set to "incoming" to only return txs that paid you or set it to "outgoing" to only return txs where you paid someone. Keeping it null (or not including it at all) means you will get all transactions, incoming *and* outgoing.
+var type = "incoming"; //optional and defaults to null. You can set it to "incoming" to only return txs that paid you or set it to "outgoing" to only return txs where you paid someone. Keeping it null (or not including it at all) means you will get all transactions, incoming *and* outgoing.
 var delay_tolerance = 3;
 var txs = await nwcjs.listTransactions ( nwc_info, from, until, limit, offset, unpaid, type, delay_tolerance );
 ```
