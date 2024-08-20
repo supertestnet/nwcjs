@@ -3,7 +3,7 @@ A vanilla javascript library for working with Nostr Wallet Connect and zaps
 
 ## Use it like this
 
-Note that nwc_info objects are also stored in nwcjs.nwc_objs so you can manage more than one NWC connection
+Note that nwc_info objects are also stored in nwcjs.nwc_infos so you can manage more than one NWC connection
 
 ```javascript
 var nwc_info = nwcjs.processNWCstring( "nostr+walletconnect://2fbe00e6698e717593febba15a68c37de13869b5c304cb8448fa3c541f8620c4?relay=wss://example.relay.com&secret=370d89b58cb4c38fccd4bba520fbbd9397f3682547b66b23a9a6888fef021038&lud16=example@lightning.com" );
