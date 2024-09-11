@@ -4,7 +4,7 @@
 // https://bundle.run/bech32@2.0.0
 var nwcjs = {
     nwc_infos: [],
-    response: null,
+    response: [],
     hexToBytes: hex => Uint8Array.from( hex.match( /.{1,2}/g ).map( byte => parseInt( byte, 16 ) ) ),
     bytesToHex: bytes => bytes.reduce( ( str, byte ) => str + byte.toString( 16 ).padStart( 2, "0" ), "" ),
     base64ToHex: str => {
@@ -98,8 +98,7 @@ var nwcjs = {
         }
         return await loop();
     },
-    getResponse: async ( nwc_info, event_id, seconds_of_delay_tolerable = 3 ) => {
-        nwcjs.response = null;
+    getResponse: async ( nwc_info, event_id, result_type, seconds_of_delay_tolerable = 3 ) => {
         var relay = nwc_info[ "relay" ];
         var ids = null;
         var kinds = [ 23195 ];
@@ -110,13 +109,14 @@ var nwcjs = {
         var ptags = [ nwc_info[ "app_pubkey" ] ];
         var events = await nwcjs.getEvents( relay, ids, kinds, until, since, limit, etags, ptags, seconds_of_delay_tolerable );
         if ( !events.length ) {
-            nwcjs.response = {
+            nwcjs.response.push({
+                result_type,
                 error: "timed out",
-            }
+            })
             return;
         }
         var dmsg = nwcjs.decrypt( nwc_info[ "app_privkey" ], events[ 0 ].pubkey, events[ 0 ].content );
-        nwcjs.response = JSON.parse( dmsg );
+        nwcjs.response.push( JSON.parse( dmsg ) );
     },
     getInfo: async ( nwc_info, seconds_of_delay_tolerable = 3 ) => {
         var msg = JSON.stringify({
@@ -133,14 +133,24 @@ var nwcjs = {
         }
         var event = await nwcjs.getSignedEvent( obj, nwc_info[ "app_privkey" ] );
         var id = event.id;
-        nwcjs.getResponse( nwc_info, id, seconds_of_delay_tolerable );
+        nwcjs.getResponse( nwc_info, id, "get_info", seconds_of_delay_tolerable );
         await nwcjs.waitSomeSeconds( 1 );
         var relay = nwc_info[ "relay" ];
         nwcjs.sendEvent( event, relay );
         var loop = async () => {
             await nwcjs.waitSomeSeconds( 1 );
-            if ( !nwcjs.response ) return await loop();
-            return nwcjs.response;
+            if ( !nwcjs.response.length ) return await loop();
+            var one_i_want = null;
+            nwcjs.response.every( ( item, index ) => {
+                if ( item[ "result_type" ] === "get_info" ) {
+                    one_i_want = item;
+                    nwcjs.response.splice( index, 1 );
+                    return;
+                }
+                return true;
+            });
+            if ( one_i_want ) return one_i_want;
+            return await loop();
         }
         return await loop();
     },
@@ -162,14 +172,24 @@ var nwcjs = {
         }
         var event = await nwcjs.getSignedEvent( obj, nwc_info[ "app_privkey" ] );
         var id = event.id;
-        nwcjs.getResponse( nwc_info, id, seconds_of_delay_tolerable );
+        nwcjs.getResponse( nwc_info, id, "make_invoice", seconds_of_delay_tolerable );
         await nwcjs.waitSomeSeconds( 1 );
         var relay = nwc_info[ "relay" ];
         nwcjs.sendEvent( event, relay );
         var loop = async () => {
             await nwcjs.waitSomeSeconds( 1 );
-            if ( !nwcjs.response ) return await loop();
-            return nwcjs.response;
+            if ( !nwcjs.response.length ) return await loop();
+            var one_i_want = null;
+            nwcjs.response.every( ( item, index ) => {
+                if ( item[ "result_type" ] === "make_invoice" ) {
+                    one_i_want = item;
+                    nwcjs.response.splice( index, 1 );
+                    return;
+                }
+                return true;
+            });
+            if ( one_i_want ) return one_i_want;
+            return await loop();
         }
         return await loop();
     },
@@ -191,14 +211,24 @@ var nwcjs = {
         }
         var event = await nwcjs.getSignedEvent( obj, nwc_info[ "app_privkey" ] );
         var id = event.id;
-        nwcjs.getResponse( nwc_info, id, seconds_of_delay_tolerable );
+        nwcjs.getResponse( nwc_info, id, "lookup_invoice", seconds_of_delay_tolerable );
         await nwcjs.waitSomeSeconds( 1 );
         var relay = nwc_info[ "relay" ];
         nwcjs.sendEvent( event, relay );
         var loop = async () => {
             await nwcjs.waitSomeSeconds( 1 );
-            if ( !nwcjs.response ) return await loop();
-            return nwcjs.response;
+            if ( !nwcjs.response.length ) return await loop();
+            var one_i_want = null;
+            nwcjs.response.every( ( item, index ) => {
+                if ( item[ "result_type" ] === "lookup_invoice" ) {
+                    one_i_want = item;
+                    nwcjs.response.splice( index, 1 );
+                    return;
+                }
+                return true;
+            });
+            if ( one_i_want ) return one_i_want;
+            return await loop();
         }
         return await loop();
         // an error looks like this:
@@ -248,14 +278,24 @@ var nwcjs = {
         }
         var event = await nwcjs.getSignedEvent( obj, nwc_info[ "app_privkey" ] );
         var id = event.id;
-        nwcjs.getResponse( nwc_info, id, seconds_of_delay_tolerable );
+        nwcjs.getResponse( nwc_info, id, "get_balance", seconds_of_delay_tolerable );
         await nwcjs.waitSomeSeconds( 1 );
         var relay = nwc_info[ "relay" ];
         nwcjs.sendEvent( event, relay );
         var loop = async () => {
             await nwcjs.waitSomeSeconds( 1 );
-            if ( !nwcjs.response ) return await loop();
-            return nwcjs.response;
+            if ( !nwcjs.response.length ) return await loop();
+            var one_i_want = null;
+            nwcjs.response.every( ( item, index ) => {
+                if ( item[ "result_type" ] === "get_balance" ) {
+                    one_i_want = item;
+                    nwcjs.response.splice( index, 1 );
+                    return;
+                }
+                return true;
+            });
+            if ( one_i_want ) return one_i_want;
+            return await loop();
         }
         return await loop();
     },
@@ -281,14 +321,24 @@ var nwcjs = {
         }
         var event = await nwcjs.getSignedEvent( obj, nwc_info[ "app_privkey" ] );
         var id = event.id;
-        nwcjs.getResponse( nwc_info, id, seconds_of_delay_tolerable );
+        nwcjs.getResponse( nwc_info, id, "list_transactions", seconds_of_delay_tolerable );
         await nwcjs.waitSomeSeconds( 1 );
         var relay = nwc_info[ "relay" ];
         nwcjs.sendEvent( event, relay );
         var loop = async () => {
             await nwcjs.waitSomeSeconds( 1 );
-            if ( !nwcjs.response ) return await loop();
-            return nwcjs.response;
+            if ( !nwcjs.response.length ) return await loop();
+            var one_i_want = null;
+            nwcjs.response.every( ( item, index ) => {
+                if ( item[ "result_type" ] === "list_transactions" ) {
+                    one_i_want = item;
+                    nwcjs.response.splice( index, 1 );
+                    return;
+                }
+                return true;
+            });
+            if ( one_i_want ) return one_i_want;
+            return await loop();
         }
         return await loop();
     },
