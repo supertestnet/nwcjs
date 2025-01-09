@@ -6,6 +6,7 @@ var nwcjs = {
     response: [],
     hexToBytes: hex => Uint8Array.from( hex.match( /.{1,2}/g ).map( byte => parseInt( byte, 16 ) ) ),
     bytesToHex: bytes => bytes.reduce( ( str, byte ) => str + byte.toString( 16 ).padStart( 2, "0" ), "" ),
+    hexToBase64: hex => btoa( hex.match( /\w{2}/g ).map( a => String.fromCharCode( parseInt( a, 16 ) ) ).join( "" ) ),
     base64ToHex: str => {
         var raw = atob( str );
         var result = '';
@@ -14,6 +15,12 @@ var nwcjs = {
             result += hex.length % 2 ? '0' + hex : hex;
         }
         return result.toLowerCase();
+    },
+    base64ToBytes: str => {
+        var raw = atob( str );
+        var result = [];
+        var i; for ( i=0; i<raw.length; i++ ) result.push( raw.charCodeAt( i ) );
+        return new Uint8Array( result );
     },
     sha256: async text_or_bytes => {
         if ( typeof text_or_bytes === "string" ) text_or_bytes = ( new TextEncoder().encode( text_or_bytes ) );
@@ -344,7 +351,7 @@ var nwcjs = {
     encrypt: async ( privkey, pubkey, text ) => {
         var msg = ( new TextEncoder() ).encode( text );
         var iv = window.crypto.getRandomValues( new Uint8Array( 16 ) );
-        var key_raw = hexToBytes( nobleSecp256k1.getSharedSecret( privkey, '02' + pubkey, true ).substring( 2 ) );
+        var key_raw = nwcjs.hexToBytes( nobleSecp256k1.getSharedSecret( privkey, '02' + pubkey, true ).substring( 2 ) );
         var key = await window.crypto.subtle.importKey(
             "raw",
             key_raw,
@@ -362,12 +369,12 @@ var nwcjs = {
         )
         emsg = new Uint8Array( emsg );
         var arr = emsg;
-        emsg = hexToBase64( bytesToHex( emsg ) ) + "?iv=" + btoa( String.fromCharCode.apply( null, iv ) );
+        emsg = nwcjs.hexToBase64( nwcjs.bytesToHex( emsg ) ) + "?iv=" + btoa( String.fromCharCode.apply( null, iv ) );
         return emsg;
     },
     decrypt: async ( privkey, pubkey, ciphertext ) => {
         var [ emsg, iv ] = ciphertext.split( "?iv=" );
-        var key_raw = hexToBytes( nobleSecp256k1.getSharedSecret( privkey, '02' + pubkey, true ).substring( 2 ) );
+        var key_raw = nwcjs.hexToBytes( nobleSecp256k1.getSharedSecret( privkey, '02' + pubkey, true ).substring( 2 ) );
         var key = await window.crypto.subtle.importKey(
             "raw",
             key_raw,
@@ -378,10 +385,10 @@ var nwcjs = {
         var decrypted = await window.crypto.subtle.decrypt(
             {
                 name: "AES-CBC",
-                iv: base64ToBytes( iv ),
+                iv: nwcjs.base64ToBytes( iv ),
             },
             key,
-            base64ToBytes( emsg ),
+            nwcjs.base64ToBytes( emsg ),
         );
         var msg = ( new TextDecoder() ).decode( decrypted );
         return msg;
