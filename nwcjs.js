@@ -1,5 +1,4 @@
-// dependencies: browserify-cipher and noble-secp256k1
-// https://bundle.run/browserify-cipher@1.0.1
+// dependencies: noble-secp256k1 and bech32
 // https://bundle.run/noble-secp256k1@1.2.14
 // https://bundle.run/bech32@2.0.0
 var nwcjs = {
@@ -115,7 +114,7 @@ var nwcjs = {
             })
             return;
         }
-        var dmsg = nwcjs.decrypt( nwc_info[ "app_privkey" ], events[ 0 ].pubkey, events[ 0 ].content );
+        var dmsg = await nwcjs.decrypt( nwc_info[ "app_privkey" ], events[ 0 ].pubkey, events[ 0 ].content );
         nwcjs.response.push( JSON.parse( dmsg ) );
     },
     getInfo: async ( nwc_info, seconds_of_delay_tolerable = 3 ) => {
@@ -123,7 +122,7 @@ var nwcjs = {
             method: "get_info",
             params: {}
         });
-        var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
+        var emsg = await nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
         var obj = {
             kind: 23194,
             content: emsg,
@@ -162,7 +161,7 @@ var nwcjs = {
                 description: desc,
             }
         });
-        var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
+        var emsg = await nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
         var obj = {
             kind: 23194,
             content: emsg,
@@ -201,7 +200,7 @@ var nwcjs = {
                 bolt11: invoice,
             }
         });
-        var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
+        var emsg = await nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
         var obj = {
             kind: 23194,
             content: emsg,
@@ -249,7 +248,7 @@ var nwcjs = {
         }
         if ( amnt ) msg[ "params" ][ "amount" ] = amnt;
         msg = JSON.stringify( msg );
-        var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
+        var emsg = await nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
         var obj = {
             kind: 23194,
             content: emsg,
@@ -268,7 +267,7 @@ var nwcjs = {
             params: {}
         }
         msg = JSON.stringify( msg );
-        var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
+        var emsg = await nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
         var obj = {
             kind: 23194,
             content: emsg,
@@ -311,7 +310,7 @@ var nwcjs = {
         if ( unpaid ) msg.params.unpaid = unpaid;
         if ( type ) msg.params.type = type;
         msg = JSON.stringify( msg );
-        var emsg = nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
+        var emsg = await nwcjs.encrypt( nwc_info[ "app_privkey" ], nwc_info[ "wallet_pubkey" ], msg );
         var obj = {
             kind: 23194,
             content: emsg,
@@ -342,27 +341,50 @@ var nwcjs = {
         }
         return await loop();
     },
-    encrypt: ( privkey, pubkey, text ) => {
-        var key = nobleSecp256k1.getSharedSecret( privkey, '02' + pubkey, true ).substring( 2 );
+    encrypt: async ( privkey, pubkey, text ) => {
+        var msg = ( new TextEncoder() ).encode( text );
         var iv = window.crypto.getRandomValues( new Uint8Array( 16 ) );
-        var cipher = browserifyCipher.createCipheriv( 'aes-256-cbc', nwcjs.hexToBytes( key ), iv );
-        var encryptedMessage = cipher.update(text,"utf8","base64");
-        emsg = encryptedMessage + cipher.final( "base64" );
-        var uint8View = new Uint8Array( iv.buffer );
-        var decoder = new TextDecoder();
-        return emsg + "?iv=" + btoa( String.fromCharCode.apply( null, uint8View ) );
-    },
-    decrypt: ( privkey, pubkey, ciphertext ) => {
-        var [ emsg, iv ] = ciphertext.split( "?iv=" );
-        var key = nobleSecp256k1.getSharedSecret( privkey, '02' + pubkey, true ).substring( 2 );
-        var decipher = browserifyCipher.createDecipheriv(
-            'aes-256-cbc',
-            nwcjs.hexToBytes( key ),
-            nwcjs.hexToBytes( nwcjs.base64ToHex( iv ) )
+        var key_raw = hexToBytes( nobleSecp256k1.getSharedSecret( privkey, '02' + pubkey, true ).substring( 2 ) );
+        var key = await window.crypto.subtle.importKey(
+            "raw",
+            key_raw,
+            "AES-CBC",
+            false,
+            [ "encrypt", "decrypt" ],
         );
-        var decryptedMessage = decipher.update( emsg, "base64" );
-        dmsg = decryptedMessage + decipher.final( "utf8" );
-        return dmsg;
+        var emsg = await window.crypto.subtle.encrypt(
+            {
+                name: "AES-CBC",
+                iv,
+            },
+            key,
+            msg,
+        )
+        emsg = new Uint8Array( emsg );
+        var arr = emsg;
+        emsg = hexToBase64( bytesToHex( emsg ) ) + "?iv=" + btoa( String.fromCharCode.apply( null, iv ) );
+        return emsg;
+    },
+    decrypt: async ( privkey, pubkey, ciphertext ) => {
+        var [ emsg, iv ] = ciphertext.split( "?iv=" );
+        var key_raw = hexToBytes( nobleSecp256k1.getSharedSecret( privkey, '02' + pubkey, true ).substring( 2 ) );
+        var key = await window.crypto.subtle.importKey(
+            "raw",
+            key_raw,
+            "AES-CBC",
+            false,
+            [ "encrypt", "decrypt" ],
+        );
+        var decrypted = await window.crypto.subtle.decrypt(
+            {
+                name: "AES-CBC",
+                iv: base64ToBytes( iv ),
+            },
+            key,
+            base64ToBytes( emsg ),
+        );
+        var msg = ( new TextDecoder() ).decode( decrypted );
+        return msg;
     },
     waitSomeSeconds: num => {
         var num = num.toString() + "000";
