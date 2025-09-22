@@ -1,6 +1,14 @@
 # nwcjs
 A vanilla javascript library for working with Nostr Wallet Connect and zaps
 
+## Import it like this
+
+```html
+<script src="https://bundle.run/noble-secp256k1@1.2.14"></script>
+<script src="https://bundle.run/bech32@2.0.0"></script>
+<script src="https://supertestnet.github.io/nwcjs/nwcjs.js"></script>
+```
+
 ## Use it like this
 
 Note that nwc_info objects are also stored in nwcjs.nwc_infos so you can manage more than one NWC connection
