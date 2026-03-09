@@ -1,6 +1,5 @@
-// dependencies: noble-secp256k1 and bech32
+// dependencies: noble-secp256k1
 // https://bundle.run/noble-secp256k1@1.2.14
-// https://bundle.run/bech32@2.0.0
 var nwcjs = {
     nwc_infos: [],
     response: [],
@@ -522,7 +521,7 @@ var nwcjs = {
         var endpoint = lnaddy.split( "@" );
         var url = "https://" + endpoint[ 1 ] + "/.well-known/lnurlp/" + endpoint[ 0 ];
         var url_bytes = new TextEncoder().encode( url );
-        var lnurl = bech32.bech32.encode( "lnurl", bech32.bech32.toWords( url_bytes ), 100_000 );
+        // var lnurl = bech32.bech32.encode( "lnurl", bech32.bech32.toWords( url_bytes ), 100_000 );
         var data = await fetch( url );
         data = await data.json();
         var serverpub = data[ "nostrPubkey" ];
