@@ -516,7 +516,7 @@ var nwcjs = {
         num = Number( num );
         return new Promise( resolve => setTimeout( resolve, num ) );
     },
-    getZapRequest: async ( lnaddy, amount, relays = ["wss://nostrue.com"] ) => {
+    getZapRequest: async ( lnaddy, amount, relays = ["wss://nostr.mom"] ) => {
         amount = amount * 1000;
         var endpoint = lnaddy.split( "@" );
         var url = "https://" + endpoint[ 1 ] + "/.well-known/lnurlp/" + endpoint[ 0 ];
@@ -550,7 +550,7 @@ var nwcjs = {
         var checking_id = pubkey;
         return [ invoice, checking_id ];
     },
-    checkZapStatus: async ( invoice, checking_id, relays = ["wss://nostrue.com"] ) => {
+    checkZapStatus: async ( invoice, checking_id, relays = ["wss://nostr.mom"] ) => {
         var bolt11;
         var events = await nwcjs.getEvents( relays[ 0 ], null, [ 9735 ], null, null, 1, [ checking_id ], null, 3 );
         if ( !events.length ) return "not paid yet";
