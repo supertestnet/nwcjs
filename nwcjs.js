@@ -521,7 +521,7 @@ var nwcjs = {
         var endpoint = lnaddy.split( "@" );
         var url = "https://" + endpoint[ 1 ] + "/.well-known/lnurlp/" + endpoint[ 0 ];
         var url_bytes = new TextEncoder().encode( url );
-        var lnurl = bech32.bech32.encode( "lnurl", bech32.bech32.toWords( url_bytes ), 100_000 );
+        // var lnurl = bech32.bech32.encode( "lnurl", bech32.bech32.toWords( url_bytes ), 100_000 );
         var data = await fetch( url );
         data = await data.json();
         var serverpub = data[ "nostrPubkey" ];
@@ -535,7 +535,7 @@ var nwcjs = {
               [ "amount", `${amount}` ],
               [ "p", serverpub ],
               [ "e", pubkey ],
-              [ "lnurl", lnurl ],
+              // [ "lnurl", lnurl ],
             ],
             created_at: Math.floor( Date.now() / 1000 ),
             pubkey: pubkey,
