@@ -543,7 +543,8 @@ var nwcjs = {
         var event = await nwcjs.getSignedEvent( obj, privkey );
         var id = event.id;
         var encoded = encodeURI( JSON.stringify( event ) );
-        var callback = data[ "callback" ] + "?amount=" + amount + "&nostr=" + encoded + "&lnurl=" + lnurl;
+        // var callback = data[ "callback" ] + "?amount=" + amount + "&nostr=" + encoded + "&lnurl=" + lnurl;
+        var callback = data[ "callback" ] + "?amount=" + amount + "&nostr=" + encoded;
         var invoice_data = await fetch( callback );
         var {pr: invoice} = await invoice_data.json();
         var checking_id = pubkey;
